@@ -1,24 +1,55 @@
-# Node Server Setup
+# Boise Codeworks: Burgers API
 
-This template is designed to help kickstart a node project. The bulk of the structure has been setup but requires a few pieces of configuration.
+Today we learned how to create an API that handles .get .post .put and .delete requests.
 
-The first thing you will need to provide is in the `.env` file. You will need to supply the port, and mongoDb connectionstring. These environment variables are used throughout the template, so be sure to add them in when moving into production as well.
+I finished it fairly quickly, so I challenged myself to develop a system in the get function that filters through the data and creates a new object off of accepted data. Then I decided to improve upon the system to make certain properties "required."
 
-**_.env_**
+I did so with the following two objects:
 
+```javascript
+let checkData = {
+        "name": [" ", true],
+        "description": [" ", true],
+        "ingredients": [[], false],
+        "notes": [" ", false]
+      }
+let acceptedData = {}
 ```
-PORT=
-CONNECTION_STRING=
+Each property in the `checkData` object is an array. The zero index of the array is the expected type of data, and the first index sets it's requirement. I then use the new `Object.entries()` method to convert the received request body into an array of arrays of keys and values and cycle through each one:
+```javascript
+for (const [key, value] of Object.entries(req.body)) {
+    if (checkData[key] && typeof checkData[key][0] == typeof value) {
+        acceptedData[key] = value
+        if (checkData[key][1]) checkData[key][1] = false
+    }
+}
 ```
+If the received data contained the same key AND the value was the right type of value, then I set that property within the `acceptedData` object. This object will be what I will push to the database. Also, if the property of `checkData` was required and fulfilled, I set that true value to false.
 
-### MVC - Controllers
+After the for loop runs, I create an array based off of the required properties in `checkData` that were not fulfilled:
+```javascript
+let missesArr = Object.entries(checkData).filter(([key, [type, needed]]) => needed == true)
+```
+If this `missesArr` has a length that is less than one, I know that everything passed. I then send that accepted object to the database:
+```javascript
+if (missesArr.length < 1) {
+    res.send(burgersService.create(acceptedData))
+}
+```
+Otherwise, I'm going to tell the client what went wrong:
+```javascript
+let missesObj = {
+        "message": "You either didn't pass a required key or passed it with improper data. The following properties show the required keys and their required form of data."
+}
+    missesArr.forEach(([key, [type, needed]]) => missesObj[key] = typeof type)
+    res.send(missesObj)
+```
+And that's it! Challenging myself was my favorite part of the project. I love programming.
 
-This template will automatically register all of the controllers found in the controllers folder of the server. This opinionated workflow should help provide a structure on how to build your api. Generally speaking every controller method should start with a `try catch block` and utilize the default error handler setup in Startup.js This means if a request ever fails the controller should call the next function with the error provided.
+<br/>
 
-### MVC - Services
-
-Services are responsible for implementing and enforcing your business rules. Be sure to use them wisely and do not put your business logic in controllers. Services should be usable by both controllers and sockets and potentally other services. Never directly access the `DbContext` outside of a service.
-
-### MVC - (Models, Collections & DbContext)
-
-Models are defined as mongoose schemas and then imported into a central location called the DbContext. All access to the database should be limited to the DbContext. `Collections.js` is a file purely designed to avoid the common problem of magic strings. This means when you register your models and have dependencies or relationships between one or more models you should import from Collections so you know the naming is always the same.
+| Project:  | Burgers API                     |
+|-----------|-----------------------------------|
+| Course:   | Boise Codeworks Fullstack Program |
+| Date:     | January 11, 2021                  |
+| Position: | W5_D1                     |
