@@ -15,7 +15,7 @@ let checkData = {
       }
 let acceptedData = {}
 ```
-Each property in the `checkData` object is an array. The zero index of the array is the expected type of data, and the first index sets it's requirement. I then use the new `Object.entries()` method to convert the received request body into an array of arrays of keys and values and cycle through each one:
+Each property in the `checkData` object is an array. The zero index of the array is the expected type of data, and the first index sets it's requirement. I then use the new `Object.entries()` method to convert the received request body into an array of arrays of keys and values then cycle through each one:
 ```javascript
 for (const [key, value] of Object.entries(req.body)) {
     if (checkData[key] && typeof checkData[key][0] == typeof value) {
@@ -24,7 +24,7 @@ for (const [key, value] of Object.entries(req.body)) {
     }
 }
 ```
-If the received data contained the same key AND the value was the right type of value, then I set that property within the `acceptedData` object. This object will be what I will push to the database. Also, if the property of `checkData` was required and fulfilled, I set that true value to false.
+If the received data contained an expected key AND the value was the right type of value, then I set that property and value within the `acceptedData` object. This object will be what I will push to the database. Also, if the property of the `checkData` object was required and fulfilled, I set that true value to false.
 
 After the for loop runs, I create an array based off of the required properties in `checkData` that were not fulfilled:
 ```javascript
@@ -36,7 +36,7 @@ if (missesArr.length < 1) {
     res.send(burgersService.create(acceptedData))
 }
 ```
-Otherwise, I'm going to tell the client what went wrong:
+Otherwise, I'm not going to accept the data and I'm going to tell the client what went wrong:
 ```javascript
 let missesObj = {
         "message": "You either didn't pass a required key or passed it with improper data. The following properties show the required keys and their required form of data."
